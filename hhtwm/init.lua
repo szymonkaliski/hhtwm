@@ -119,22 +119,17 @@ module.findTrackedWindow = function(win)
 end
 
 module.getLayouts = function()
-  local layoutNames  = {}
-  local finalLayouts = {}
-
   if hhtwm.enabledLayouts ~= nil then
-    hs.fnutils.each(hhtwm.enabledLayouts, function(layoutName)
-      finalLayouts[layoutName] = layouts[layoutName]
-    end)
+    return hhtwm.enabledLayouts
   else
-    finalLayouts = layouts
-  end
+    local layoutNames  = {}
 
-  for key in pairs(layouts) do
-    table.insert(layoutNames, key)
-  end
+    for key in pairs(layouts) do
+      table.insert(layoutNames, key)
+    end
 
-  return layoutNames
+    return layoutNames
+  end
 end
 
 -- sets layout for space id,
@@ -178,8 +173,8 @@ module.getLayout = function(spaceId)
   end)
 
   return cache.layouts[spaceId]
-      or (screen and hhtwm.displayLayouts[screen:id()])
-      or (screen and hhtwm.displayLayouts[screen:name()])
+      or (screen and hhtwm.displayLayouts and hhtwm.displayLayouts[screen:id()])
+      or (screen and hhtwm.displayLayouts and hhtwm.displayLayouts[screen:name()])
       or hhtwm.defaultLayout
 end
 
@@ -513,8 +508,8 @@ module.tile = function()
       return
     end
 
-    if #win:spaces() == 0 then
-      -- log.d('window has no :spaces()', hs.inspect(win))
+    -- we also don't care about special windows that have no spaces
+    if not #win:spaces() or #win:spaces() == 0 then
       return
     end
 
