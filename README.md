@@ -1,9 +1,9 @@
 # HHTWM
 ## Hackable Hammerspoon Tiling WM
 
-<div style="text-align:center; margin-top: 10px; margin-bottom: 20px">
+<p align="center">
   <img src="assets/screencast.gif" />
-</div>
+</p>
 
 HHTMW is a module for [Hammerspoon](http://www.hammerspoon.org) providing automatic layout-based tiling.
 
