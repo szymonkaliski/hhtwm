@@ -655,8 +655,8 @@ module.detectTile = function(win)
 
   if hhtwm.filters then
     local foundMatch = hs.fnutils.find(hhtwm.filters, function(obj)
-      local appMatches     = ternary(obj.app ~= nil, string.match(app, obj.app or ''), true)
-      local titleMatches   = ternary(obj.title ~= nil, string.match(title, obj.title or ''), true)
+      local appMatches     = ternary(obj.app ~= nil and app ~= nil, string.match(app, obj.app or ''), true)
+      local titleMatches   = ternary(obj.title ~= nil and title ~= nil, string.match(title, obj.title or ''), true)
       local roleMatches    = ternary(obj.role ~= nil, obj.role == role, true)
       local subroleMatches = ternary(obj.subrole ~= nil, obj.subrole == subrole, true)
 
