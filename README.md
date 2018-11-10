@@ -17,8 +17,17 @@ It's configurable, hackable, and composes well with other Hammerspoon libraries.
 2. copy `hhtwm/` folder to `~/.hammerspoonn/`
 3. require the library in your `init.lua`:
   ```lua
-  local hhtwm = require('hhtwm')
+  hhtwm = require('hhtwm') -- it's recommended to make `hhtwm` a global object so it's not garbage collected.
   ```
+
+## MVP
+
+Smallest `init.lua` that tiles by default (with no keybindings and no margins):
+
+```lua
+hhtwm = require('hhtwm')
+hhtwm.start()
+```
 
 ## Configuration
 
