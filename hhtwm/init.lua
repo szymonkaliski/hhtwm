@@ -509,7 +509,7 @@ module.tile = function()
     end
 
     -- we also don't care about special windows that have no spaces
-    if not #win:spaces() or #win:spaces() == 0 then
+    if not win:spaces() or #win:spaces() == 0 then
       return
     end
 
