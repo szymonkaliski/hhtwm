@@ -31,19 +31,21 @@ hhtwm.start()
 
 ## Configuration
 
+All settings are optional.
+
 - `hhtwm.margin` - `[number]` - gap size between windows (in px)
 - `hhtwm.screenMargin` - `[object]` (`{ top = 30, bottom = 5, left = 5, right = 5 }`) - gap size from screen edges
 - `hhtwm.defaultLayout` - `[string]` - name of default layout to be applied
-- `hhtwm.enabledLayouts` - `[array]` *(optional)* - list of enabled layouts, all layouts are enabled by default
-- `hhtwm.displayLayouts` - `[object]` *(optional)* (`{ [leftScreenId] = "equal-right" }`) - per-screen default layouts
-- `hhtwm.filters` - `[object]` *(optional)* - filters to force tiling on/off, example:
+- `hhtwm.enabledLayouts` - `[array]` - list of enabled layouts, all layouts are enabled by default
+- `hhtwm.displayLayouts` - `[object]` (`{ [leftScreenId] = "equal-right" }`) - per-screen default layouts
+- `hhtwm.filters` - `[object]` - filters to force tiling on/off, example:
   ```lua
   hhtwm.filters = {
     { app = 'Finder', tile = false } -- don't tile Finder
     { app = 'Hammerspoon', title = 'Hammerspoon Console', tile = true } -- force tile Hammerspoon Console
   }
   ```
-- `hhtwm.calcResizeStep` - `[function]` *(optional)* - function to calculate resize step, example:
+- `hhtwm.calcResizeStep` - `[function]` - function to calculate resize step, example:
   ```lua
   hhtwm.calcResizeStep = function(screen)
     return 1 / hs.grid.getGrid(screen).w -- make the resize step be the same as hs.grid size for given screen
