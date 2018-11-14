@@ -33,7 +33,7 @@ layouts["monocle"] = function(_, _, screen)
 end
 
 layouts["cards"] = function(_, windows, screen, index)
-  local margin     = httwm.margin or 0
+  local margin     = hhtwm.margin or 0
   local insetFrame = getInsetFrame(screen)
   local offset     = margin / 2
 
@@ -57,7 +57,7 @@ layouts["columns"] = function(window, windows, screen, index, layoutOptions)
     return layouts["main-left"](window, windows, screen, index, layoutOptions)
   end
 
-  local margin      = httwm.margin or 0
+  local margin      = hhtwm.margin or 0
   local screenFrame = screen:fullFrame()
   local insetFrame  = getInsetFrame(screen)
 
