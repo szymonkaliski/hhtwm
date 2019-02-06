@@ -1,15 +1,14 @@
 -- hhtwm - hackable hammerspoon tiling wm
 
-local axuiWindowElement    = require('hs._asm.axuielement').windowElement
-local layouts              = require('hhtwm.layouts')
-local spaces               = require('hs._asm.undocumented.spaces')
+local axuiWindowElement = require('hs._asm.axuielement').windowElement
+local createLayouts     = require('hhtwm.layouts')
+local spaces            = require('hs._asm.undocumented.spaces')
 
-local log                  = hs.logger.new('hhtwm', 'debug');
+local cache   = { spaces = {}, layouts = {}, floating = {}, layoutOptions = {} }
+local module  = { cache = cache }
 
--- TODO: user floating vs layout floating windows?
--- now switching a layout when one of the windows was floated by user, makes this window into non-floating one
-local cache                = { spaces = {}, layouts = {}, floating = {}, layoutOptions = {} }
-local module               = { cache = cache }
+local layouts = createLayouts(module)
+local log     = hs.logger.new('hhtwm', 'debug');
 
 local SWAP_BETWEEN_SCREENS = false
 
@@ -119,8 +118,8 @@ module.findTrackedWindow = function(win)
 end
 
 module.getLayouts = function()
-  if hhtwm.enabledLayouts ~= nil then
-    return hhtwm.enabledLayouts
+  if module.enabledLayouts ~= nil then
+    return module.enabledLayouts
   else
     local layoutNames  = {}
 
@@ -173,9 +172,9 @@ module.getLayout = function(spaceId)
   end)
 
   return cache.layouts[spaceId]
-      or (screen and hhtwm.displayLayouts and hhtwm.displayLayouts[screen:id()])
-      or (screen and hhtwm.displayLayouts and hhtwm.displayLayouts[screen:name()])
-      or hhtwm.defaultLayout
+      or (screen and module.displayLayouts and module.displayLayouts[screen:id()])
+      or (screen and module.displayLayouts and module.displayLayouts[screen:name()])
+      or module.defaultLayout
 end
 
 module.resizeLayout = function(resizeOpt)
@@ -186,7 +185,7 @@ module.resizeLayout = function(resizeOpt)
     cache.layoutOptions[spaceId] = getDefaultLayoutOptions()
   end
 
-  local calcResizeStep = hhtwm.calcResizeStep or function() return 0.1 end
+  local calcResizeStep = module.calcResizeStep or function() return 0.1 end
   local screen         = getScreenBySpaceId(spaceId)
   local step           = calcResizeStep(screen)
 
@@ -220,7 +219,7 @@ module.swapInDirection = function(win, direction)
   local windowsInDirection = win['windowsTo' .. capitalize(direction)](win)
 
   windowsInDirection = hs.fnutils.filter(windowsInDirection, function(testWin)
-    return testWin:isStandard() and not hhtwm.isFloating(testWin)
+    return testWin:isStandard() and not module.isFloating(testWin)
   end)
 
   if #windowsInDirection >= 1 then
@@ -237,7 +236,7 @@ module.swapInDirection = function(win, direction)
       winSpaceId,
       winIdx
     }, function(_) return _ == nil end) then
-      log.d('swapInDirection error', hs.inspect({ winInDirectionSpaceId, winInDirectionIdx, winSpaceId, winIdx }));
+      log.e('swapInDirection error', hs.inspect({ winInDirectionSpaceId, winInDirectionIdx, winSpaceId, winIdx }));
       return
     end
 
@@ -285,7 +284,7 @@ module.throwToScreen = function(win, direction)
   }
 
   if not directions[direction] then
-    log.d('can\'t throw in direction:', direction)
+    log.e('can\'t throw in direction:', direction)
     return
   end
 
@@ -296,7 +295,7 @@ module.throwToScreen = function(win, direction)
     local _, winSpaceId, winIdx = module.findTrackedWindow(win)
 
     if hs.fnutils.some({ winSpaceId, winIdx }, function(_) return _ == nil end) then
-      log.d('throwToScreen error', hs.inspect({ winSpaceId, winIdx }));
+      log.e('throwToScreen error', hs.inspect({ winSpaceId, winIdx }));
       return
     end
 
@@ -304,7 +303,7 @@ module.throwToScreen = function(win, direction)
     if cache.spaces[winSpaceId] then
       table.remove(cache.spaces[winSpaceId], winIdx)
     else
-      log.d('throwToScreen no cache.spaces for space id:', winSpaceId)
+      log.e('throwToScreen no cache.spaces for space id:', winSpaceId)
     end
 
     -- move window to screen
@@ -330,7 +329,7 @@ module.throwToScreenUsingSpaces = function(win, direction)
   }
 
   if not directions[direction] then
-    log.d('can\'t throw in direction:', direction)
+    log.e('can\'t throw in direction:', direction)
     return
   end
 
@@ -340,14 +339,14 @@ module.throwToScreenUsingSpaces = function(win, direction)
   local throwToSpaceId    = currentSpaces[screenInDirection:id()]
 
   if not throwToSpaceId then
-    log.d('no space to throw to')
+    log.e('no space to throw to')
     return
   end
 
   local _, winSpaceId, winIdx = module.findTrackedWindow(win)
 
   if hs.fnutils.some({ winSpaceId, winIdx }, function(_) return _ == nil end) then
-    log.d('throwToScreenUsingSpaces error', hs.inspect({ winSpaceId, winIdx }));
+    log.e('throwToScreenUsingSpaces error', hs.inspect({ winSpaceId, winIdx }));
     return
   end
 
@@ -355,7 +354,7 @@ module.throwToScreenUsingSpaces = function(win, direction)
   if cache.spaces[winSpaceId] then
     table.remove(cache.spaces[winSpaceId], winIdx)
   else
-    log.d('throwToScreenUsingSpaces no cache.spaces for space id:', winSpaceId)
+    log.e('throwToScreenUsingSpaces no cache.spaces for space id:', winSpaceId)
   end
 
   local newX = screenInDirection:frame().x
@@ -375,7 +374,7 @@ module.throwToSpace = function(win, spaceIdx)
   local targetScreenFrame = targetScreen:frame()
 
   if not spaceId then
-    log.d('throwToSpace tried to move to non-existing space', spaceId, hs.inspect(spacesIds))
+    log.e('throwToSpace tried to move to non-existing space', spaceId, hs.inspect(spacesIds))
     return false
   end
 
@@ -396,7 +395,7 @@ module.throwToSpace = function(win, spaceIdx)
   local _, winSpaceId, winIdx = module.findTrackedWindow(win)
 
   if hs.fnutils.some({ winSpaceId, winIdx }, function(_) return _ == nil end) then
-    log.d('throwToSpace error', hs.inspect({ winSpaceId, winIdx }));
+    log.e('throwToSpace error', hs.inspect({ winSpaceId, winIdx }));
     return false
   end
 
@@ -404,7 +403,7 @@ module.throwToSpace = function(win, spaceIdx)
   if cache.spaces[winSpaceId] then
     table.remove(cache.spaces[winSpaceId], winIdx)
   else
-    log.d('throwToSpace no cache.spaces for space id:', winSpaceId)
+    log.e('throwToSpace no cache.spaces for space id:', winSpaceId)
   end
 
   -- move to space
@@ -468,7 +467,7 @@ module.toggleFloat = function(win)
     if cache.spaces[winSpaceId] then
       table.remove(cache.spaces[winSpaceId], winIdx)
     else
-      log.d('window made floating without previous :space()', hs.inspect(foundWin))
+      log.e('window made floating without previous :space()', hs.inspect(foundWin))
     end
 
     table.insert(cache.floating, win)
@@ -491,7 +490,7 @@ local shouldFloat = function(win)
   if isTrackedAsFloating then return true end
 
   -- otherwise detect if window should be floated/tiled
-  return not hhtwm.detectTile(win)
+  return not module.detectTile(win)
 end
 
 -- tile windows - combine caches with current state, and apply layout
@@ -530,7 +529,7 @@ module.tile = function()
     local trackedWin, trackedSpaceId, _ = module.findTrackedWindow(win)
 
     -- -- window is "new" if it's not in cache at all, or if it changed space
-    -- log.d('update cache.spaces', hs.inspect({
+    -- log.e('update cache.spaces', hs.inspect({
     --   win = win,
     --   spaces = spaces,
     --   spaceId = spaceId,
@@ -569,10 +568,10 @@ module.tile = function()
       end
 
       if duplicateIdx > 0 then
-        log.d('duplicateIdx', i, duplicateIdx, spaceWindows[i]:id(), spaceWindows[duplicateIdx]:id(), hs.inspect(spaceWindows))
+        log.e('duplicateIdx', i, duplicateIdx, spaceWindows[i]:id(), spaceWindows[duplicateIdx]:id(), hs.inspect(spaceWindows))
       end
 
-      -- log.d('existsOnScreen', hs.inspect({
+      -- log.e('existsOnScreen', hs.inspect({
       --   existsOnScreen = existsOnScreen and true or false,
       --   spaceWindow = spaceWindows[i],
       --   -- spaceWindows = spaceWindows
@@ -613,7 +612,7 @@ module.tile = function()
       local layoutName    = module.getLayout(spaceId)
 
       if not layoutName or not layouts[layoutName] then
-        log.d('layout doesn\'t exist: ' .. layoutName)
+        log.e('layout doesn\'t exist: ' .. layoutName)
       else
         for index, window in pairs(screenWindows) do
           local frame = layouts[layoutName](
@@ -653,8 +652,8 @@ module.detectTile = function(win)
   local subrole = win:subrole()
   local title   = win:title()
 
-  if hhtwm.filters then
-    local foundMatch = hs.fnutils.find(hhtwm.filters, function(obj)
+  if module.filters then
+    local foundMatch = hs.fnutils.find(module.filters, function(obj)
       local appMatches     = ternary(obj.app ~= nil and app ~= nil, string.match(app, obj.app or ''), true)
       local titleMatches   = ternary(obj.title ~= nil and title ~= nil, string.match(title, obj.title or ''), true)
       local roleMatches    = ternary(obj.role ~= nil, obj.role == role, true)
@@ -687,8 +686,8 @@ local loadSettings = function()
   local jsonFloatingCache = hs.settings.get('hhtwm.floatingCache')
 
   log.d('reading from hs.settings')
-  log.d('hhtwm.tilingCache', jsonTilingCache)
-  log.d('hhtwm.floatingCache', jsonFloatingCache)
+  log.v('hhtwm.tilingCache', jsonTilingCache)
+  log.v('hhtwm.floatingCache', jsonFloatingCache)
 
   -- decode tiling cache
   if jsonTilingCache then
@@ -743,8 +742,8 @@ local saveSettings = function()
   local jsonFloatingCache = hs.json.encode(floatingCache)
 
   log.d('storing to hs.settings')
-  log.d('hhtwm.tiling', jsonTilingCache)
-  log.d('hhtwm.floating', jsonFloatingCache)
+  log.v('hhtwm.tiling', jsonTilingCache)
+  log.v('hhtwm.floating', jsonFloatingCache)
 
   hs.settings.set('hhtwm.tilingCache',   jsonTilingCache)
   hs.settings.set('hhtwm.floatingCache', jsonFloatingCache)
