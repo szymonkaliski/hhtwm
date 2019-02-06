@@ -5,7 +5,7 @@
   <img src="assets/screencast.gif" />
 </p>
 
-HHTWM is a module for [Hammerspoon](http://www.hammerspoon.org) providing automatic layout-based tiling.
+HHTWM is a module for [Hammerspoon](http://www.hammerspoon.org) providing automatic layout-based tiling for macOS.
 
 It's configurable, hackable, and composes well with other Hammerspoon libraries.
 
