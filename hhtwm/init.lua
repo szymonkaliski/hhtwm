@@ -528,8 +528,7 @@ module.tile = function()
     local tmp                           = cache.spaces[spaceId] or {}
     local trackedWin, trackedSpaceId, _ = module.findTrackedWindow(win)
 
-    -- -- window is "new" if it's not in cache at all, or if it changed space
-    -- log.e('update cache.spaces', hs.inspect({
+    -- log.d('update cache.spaces', hs.inspect({
     --   win = win,
     --   spaces = spaces,
     --   spaceId = spaceId,
@@ -538,6 +537,7 @@ module.tile = function()
     --   shouldInsert = not trackedWin or trackedSpaceId ~= spaceId
     -- }))
 
+    -- window is "new" if it's not in cache at all, or if it changed space
     if not trackedWin or trackedSpaceId ~= spaceId then
       -- table.insert(tmp, 1, win)
       table.insert(tmp, win)
@@ -549,9 +549,8 @@ module.tile = function()
   -- clean up tiling cache
   hs.fnutils.each(currentSpaces, function(spaceId)
     local spaceWindows = cache.spaces[spaceId] or {}
-    local i = 1
 
-    while i <= #spaceWindows do
+    for i = #spaceWindows, 1, - 1 do
       -- window exists in cache if there's spaceId and windowId match
       local existsOnScreen = hs.fnutils.find(tilingWindows, function(win)
         return win:id() == spaceWindows[i]:id() and win:spaces()[1] == spaceId
@@ -561,21 +560,19 @@ module.tile = function()
       -- this shouldn't happen, but helps for now...
       local duplicateIdx = 0
 
-      for j = i + 1, #spaceWindows do
-        if spaceWindows[i]:id() == spaceWindows[j]:id() then
+      for j = 1, #spaceWindows do
+        if spaceWindows[i]:id() == spaceWindows[j]:id() and i ~= j then
           duplicateIdx = j
         end
       end
 
       if duplicateIdx > 0 then
-        log.e('duplicateIdx', i, duplicateIdx, spaceWindows[i]:id(), spaceWindows[duplicateIdx]:id(), hs.inspect(spaceWindows))
+        log.e('duplicate idx', hs.inspect({
+          i = i,
+          duplicateIdx = duplicateIdx,
+          spaceWindows = spaceWindows
+        }))
       end
-
-      -- log.e('existsOnScreen', hs.inspect({
-      --   existsOnScreen = existsOnScreen and true or false,
-      --   spaceWindow = spaceWindows[i],
-      --   -- spaceWindows = spaceWindows
-      -- }))
 
       if not existsOnScreen or duplicateIdx > 0 then
         table.remove(spaceWindows, i)
@@ -603,6 +600,8 @@ module.tile = function()
 
   -- apply layout window-by-window
   local moveToFloat = {}
+
+  hs.drawing.disableScreenUpdates()
 
   hs.fnutils.each(currentSpaces, function(spaceId)
     local spaceWindows = cache.spaces[spaceId] or {}
@@ -634,6 +633,8 @@ module.tile = function()
       end
     end)
   end)
+
+  hs.drawing.enableScreenUpdates()
 
   hs.fnutils.each(moveToFloat, function(win)
     local _, spaceId, winIdx = module.findTrackedWindow(win)
@@ -692,16 +693,20 @@ local loadSettings = function()
   -- decode tiling cache
   if jsonTilingCache then
     local tilingCache = hs.json.decode(jsonTilingCache)
+    local spacesIds = getSpacesIdsTable()
 
     hs.fnutils.each(tilingCache, function(obj)
-      cache.spaces[obj.spaceId]        = {}
-      cache.layouts[obj.spaceId]       = obj.layout
-      cache.layoutOptions[obj.spaceId] = obj.layoutOptions
+      -- we don't care about spaces that no longer exist
+      if hs.fnutils.contains(spacesIds, obj.spaceId) then
+        cache.spaces[obj.spaceId]        = {}
+        cache.layouts[obj.spaceId]       = obj.layout
+        cache.layoutOptions[obj.spaceId] = obj.layoutOptions
 
-      hs.fnutils.each(obj.windowIds, function(winId)
-        local win = hs.window.find(winId)
-        if win then table.insert(cache.spaces[obj.spaceId], win) end
-      end)
+        hs.fnutils.each(obj.windowIds, function(winId)
+          local win = hs.window.find(winId)
+          if win then table.insert(cache.spaces[obj.spaceId], win) end
+        end)
+      end
     end)
   end
 
@@ -711,7 +716,11 @@ local loadSettings = function()
 
     hs.fnutils.each(floatingCache, function(winId)
       local win = hs.window.find(winId)
-      if win then table.insert(cache.floating, win) end
+
+      -- we don't care about windows that no longer exist
+      if win then
+        table.insert(cache.floating, win)
+      end
     end)
   end
 end
@@ -753,6 +762,7 @@ module.start = function()
   -- load window/floating status from saved state
   loadSettings()
 
+  -- start window filter
   cache.filter = hs.window.filter.new()
     :setDefaultFilter()
     :setOverrideFilter({
