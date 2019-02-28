@@ -150,9 +150,10 @@ module.setLayout = function(layout, spaceId)
 end
 
 -- get layout for space id, priorities:
--- 1. layout selected by setLayout
--- 2. layout assigned by tilign.displayLayouts
--- 3. hhtwm.defaultLayout
+-- 1. already set layout (cache)
+-- 2. layout selected by setLayout
+-- 3. layout assigned by tilign.displayLayouts
+-- 4. hhtwm.defaultLayout
 module.getLayout = function(spaceId)
   spaceId = spaceId or getSpaceId()
 
@@ -175,6 +176,14 @@ module.getLayout = function(spaceId)
       or (screen and module.displayLayouts and module.displayLayouts[screen:id()])
       or (screen and module.displayLayouts and module.displayLayouts[screen:name()])
       or module.defaultLayout
+end
+
+-- resbuild cache.layouts table using provided hhtwm.displayLayouts and hhtwm.defaultLayout
+module.resetLayouts = function()
+  for key in pairs(cache.layouts) do
+    cache.layouts[key] = nil
+    cache.layouts[key] = module.getLayout(key)
+  end
 end
 
 module.resizeLayout = function(resizeOpt)
