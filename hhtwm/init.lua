@@ -504,6 +504,11 @@ end
 
 -- tile windows - combine caches with current state, and apply layout
 module.tile = function()
+  -- ignore tiling if we're doing something with a mouse
+  if #hs.mouse.getButtons() ~= 0 then
+    return
+  end
+
   -- this allows us to have tabs and do proper tiling!
   local tilingWindows   = {}
   local floatingWindows = {}

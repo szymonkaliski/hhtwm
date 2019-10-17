@@ -1,3 +1,5 @@
+-- hhtwm layouts
+
 return function(hhtwm)
   local layouts = {}
 
@@ -56,15 +58,14 @@ return function(hhtwm)
       return layouts["main-left"](window, windows, screen, index, layoutOptions)
     end
 
-    local margin      = hhtwm.margin or 0
-    local screenFrame = screen:fullFrame()
-    local insetFrame  = getInsetFrame(screen)
+    local margin     = hhtwm.margin or 0
+    local insetFrame = getInsetFrame(screen)
 
-    local mainColumnWidth = (screenFrame.w / 3) + (layoutOptions.mainPaneRatio - 0.5) * insetFrame.w
+    local mainColumnWidth = (insetFrame.w / 3) + (layoutOptions.mainPaneRatio - 0.5) * insetFrame.w
 
     if index == 1 then
       return {
-        x = insetFrame.x + (screenFrame.w - mainColumnWidth) / 2,
+        x = insetFrame.x + (insetFrame.w - mainColumnWidth) / 2,
         y = insetFrame.y + margin / 2,
         w = mainColumnWidth - margin,
         h = insetFrame.h - margin
@@ -82,7 +83,7 @@ return function(hhtwm)
       local divs = math.floor((#windows - 1) / 2)
       local h    = insetFrame.h / divs
 
-      frame.x = frame.x + (screenFrame.w - frame.w - margin) - margin / 2
+      frame.x = frame.x + (insetFrame.w - frame.w - margin) - margin / 2
       frame.h = h - margin
       frame.y = insetFrame.y + h * math.floor(index / 2 - 1) + margin / 2
     else
@@ -98,10 +99,9 @@ return function(hhtwm)
   end
 
   layouts["rows"] = function(window, windows, screen, index, layoutOptions)
-    local margin      = hhtwm.margin or 0
-    local screenFrame = screen:fullFrame()
-    local insetFrame  = getInsetFrame(screen)
-    local rowHeight   = insetFrame.h / #windows
+    local margin     = hhtwm.margin or 0
+    local insetFrame = getInsetFrame(screen)
+    local rowHeight  = insetFrame.h / #windows
 
     local frame = {
       x = insetFrame.x + margin / 2,
@@ -272,14 +272,13 @@ return function(hhtwm)
   end
 
   layouts["main-center"] = function(window, windows, screen, index, layoutOptions)
-    local screenFrame     = screen:fullFrame()
     local insetFrame      = getInsetFrame(screen)
     local margin          = hhtwm.margin or 0
-    local mainColumnWidth = (screenFrame.w * 2 / 3) + (layoutOptions.mainPaneRatio - 0.5) * insetFrame.w
+    local mainColumnWidth = (insetFrame.w * 1 / 2) + (layoutOptions.mainPaneRatio - 0.5) * insetFrame.w
 
     if index == 1 then
       return {
-        x = insetFrame.x + (screenFrame.w - mainColumnWidth) / 2,
+        x = insetFrame.x + (insetFrame.w - mainColumnWidth) / 2 + margin / 2,
         y = insetFrame.y + margin / 2,
         w = mainColumnWidth - margin,
         h = insetFrame.h - margin
@@ -297,14 +296,14 @@ return function(hhtwm)
       local divs = math.floor((#windows - 1) / 2)
       local h    = insetFrame.h / divs
 
-      frame.x = frame.x + (screenFrame.w - frame.w - margin) - margin / 2
+      frame.x = frame.x + margin / 2
       frame.h = h - margin
       frame.y = insetFrame.y + h * math.floor(index / 2 - 1) + margin / 2
     else
       local divs = math.ceil((#windows - 1) / 2)
       local h    = insetFrame.h / divs
 
-      frame.x = frame.x + margin / 2
+      frame.x = frame.x + (insetFrame.w - frame.w - margin) + margin / 2
       frame.h = h - margin
       frame.y = insetFrame.y + h * math.floor(index / 2 - 1) + margin / 2
     end
