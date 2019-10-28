@@ -118,17 +118,13 @@ module.findTrackedWindow = function(win)
 end
 
 module.getLayouts = function()
-  if module.enabledLayouts ~= nil then
-    return module.enabledLayouts
-  else
-    local layoutNames  = {}
+  local layoutNames  = {}
 
-    for key in pairs(layouts) do
-      table.insert(layoutNames, key)
-    end
-
-    return layoutNames
+  for key in pairs(layouts) do
+    table.insert(layoutNames, key)
   end
+
+  return layoutNames
 end
 
 -- sets layout for space id,
@@ -197,13 +193,17 @@ module.resizeLayout = function(resizeOpt)
   local calcResizeStep = module.calcResizeStep or function() return 0.1 end
   local screen         = getScreenBySpaceId(spaceId)
   local step           = calcResizeStep(screen)
+  local ratio          = cache.layoutOptions[spaceId].mainPaneRatio
 
-  if resizeOpt == 'thinner' then
-    cache.layoutOptions[spaceId].mainPaneRatio = math.max(cache.layoutOptions[spaceId].mainPaneRatio - step, 0)
+  if not resizeOpt then
+    ratio = 0.5
+  elseif resizeOpt == 'thinner' then
+    ratio = math.max(ratio - step, 0)
   elseif resizeOpt == 'wider' then
-    cache.layoutOptions[spaceId].mainPaneRatio = math.min(cache.layoutOptions[spaceId].mainPaneRatio + step, 1)
+    ratio = math.min(ratio + step, 1)
   end
 
+  cache.layoutOptions[spaceId].mainPaneRatio = ratio
   module.tile()
 end
 

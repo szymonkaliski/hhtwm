@@ -274,7 +274,7 @@ return function(hhtwm)
   layouts["main-center"] = function(window, windows, screen, index, layoutOptions)
     local insetFrame      = getInsetFrame(screen)
     local margin          = hhtwm.margin or 0
-    local mainColumnWidth = (insetFrame.w * 1 / 2) + (layoutOptions.mainPaneRatio - 0.5) * insetFrame.w
+    local mainColumnWidth = insetFrame.w * layoutOptions.mainPaneRatio + margin / 2
 
     if index == 1 then
       return {
@@ -312,10 +312,6 @@ return function(hhtwm)
   end
 
   layouts["side-by-side"] = function(window, windows, screen, index, layoutOptions)
-    if #windows == 1 then
-      return layouts.monocle(window, windows, screen)
-    end
-
     local margin     = hhtwm.margin or 0
     local insetFrame = getInsetFrame(screen)
 
