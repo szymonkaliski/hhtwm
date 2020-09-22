@@ -11,9 +11,7 @@ It's configurable, hackable, and composes well with other Hammerspoon libraries.
 
 ## Setup
 
-1. install two required dependencies:
-  - [`hs._asm.axuielement`](https://github.com/asmagill/hs._asm.axuielement)
-  - [`hs._asm.undocumented.spaces`](https://github.com/asmagill/hs._asm.undocumented.spaces)
+1. install required dependency - [`hs._asm.undocumented.spaces`](https://github.com/asmagill/hs._asm.undocumented.spaces)
 2. copy `hhtwm/` folder to `~/.hammerspoonn/`
 3. require the library in your `init.lua`:
   ```lua

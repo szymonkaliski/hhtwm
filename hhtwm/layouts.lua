@@ -33,181 +33,9 @@ return function(hhtwm)
     return frame
   end
 
-  layouts["cards"] = function(_, windows, screen, index)
-    local margin     = hhtwm.margin or 0
-    local insetFrame = getInsetFrame(screen)
-    local offset     = margin / 2
-
-    local x = (insetFrame.x + margin / 2) + offset * (index - 1)
-    local y = (insetFrame.y + margin / 2) + offset * (index - 1)
-    local w = (insetFrame.w - margin) - offset * (#windows - 1)
-    local h = (insetFrame.h - margin) - offset * (#windows - 1)
-
-    local frame = {
-      x = x,
-      y = y,
-      w = w,
-      h = h
-    }
-
-    return frame
-  end
-
-  layouts["columns"] = function(window, windows, screen, index, layoutOptions)
-    if #windows < 3 then
-      return layouts["main-left"](window, windows, screen, index, layoutOptions)
-    end
-
-    local margin     = hhtwm.margin or 0
-    local insetFrame = getInsetFrame(screen)
-
-    local mainColumnWidth = (insetFrame.w / 3) + (layoutOptions.mainPaneRatio - 0.5) * insetFrame.w
-
-    if index == 1 then
-      return {
-        x = insetFrame.x + (insetFrame.w - mainColumnWidth) / 2,
-        y = insetFrame.y + margin / 2,
-        w = mainColumnWidth - margin,
-        h = insetFrame.h - margin
-      }
-    end
-
-    local frame = {
-      x = insetFrame.x,
-      y = 0,
-      w = (insetFrame.w - mainColumnWidth) / 2 - margin,
-      h = 0,
-    }
-
-    if (index - 1) % 2 == 0 then
-      local divs = math.floor((#windows - 1) / 2)
-      local h    = insetFrame.h / divs
-
-      frame.x = frame.x + (insetFrame.w - frame.w - margin) - margin / 2
-      frame.h = h - margin
-      frame.y = insetFrame.y + h * math.floor(index / 2 - 1) + margin / 2
-    else
-      local divs = math.ceil((#windows - 1) / 2)
-      local h    = insetFrame.h / divs
-
-      frame.x = frame.x + margin / 2
-      frame.h = h - margin
-      frame.y = insetFrame.y + h * math.floor(index / 2 - 1) + margin / 2
-    end
-
-    return frame
-  end
-
-  layouts["rows"] = function(window, windows, screen, index, layoutOptions)
-    local margin     = hhtwm.margin or 0
-    local insetFrame = getInsetFrame(screen)
-    local rowHeight  = insetFrame.h / #windows
-
-    local frame = {
-      x = insetFrame.x + margin / 2,
-      y = insetFrame.y + rowHeight * (index - 1) + margin / 2,
-      w = insetFrame.w - margin,
-      h = rowHeight - margin,
-    }
-
-    return frame
-  end
-
-  layouts["equal-left"] = function(window, windows, screen, index, layoutOptions)
-    if #windows == 1 then
-      return layouts.monocle(window, windows, screen)
-    end
-
-    local margin     = hhtwm.margin or 0
-    local insetFrame = getInsetFrame(screen)
-
-    local frame = {
-      x = insetFrame.x,
-      y = insetFrame.y,
-      w = 0,
-      h = 0
-    }
-
-    -- swap direction just for first two windows
-    if #windows >= 2 then
-      if index == 1 then
-        index = 2
-      elseif index == 2 then
-        index = 1
-      end
-    end
-
-    if index % 2 == 0 then
-      local divs = math.floor(#windows / 2)
-      local h    = insetFrame.h / divs
-
-      frame.h = h - margin
-      frame.w = insetFrame.w * layoutOptions.mainPaneRatio - margin
-      frame.x = frame.x + margin / 2
-      frame.y = frame.y + h * math.floor(index / 2 - 1) + margin / 2
-    else
-      local divs = math.ceil(#windows / 2)
-      local h    = insetFrame.h / divs
-
-      frame.h = h - margin
-      frame.w = insetFrame.w * (1 - layoutOptions.mainPaneRatio) - margin
-      frame.x = frame.x + insetFrame.w * layoutOptions.mainPaneRatio + margin / 2
-      frame.y = frame.y + h * math.floor(index / 2) + margin / 2
-    end
-
-    return frame
-  end
-
-  layouts["equal-right"] = function(window, windows, screen, index, layoutOptions)
-    if #windows == 1 then
-      return layouts.monocle(window, windows, screen)
-    end
-
-    local margin     = hhtwm.margin or 0
-    local insetFrame = getInsetFrame(screen)
-
-    local frame = {
-      x = insetFrame.x,
-      y = insetFrame.y,
-      w = 0,
-      h = 0
-    }
-
-    frame.w = insetFrame.w / 2 - margin
-
-    -- swap direction just for first two windows
-    if #windows >= 2 then
-      if index == 1 then
-        index = 2
-      elseif index == 2 then
-        index = 1
-      end
-    end
-
-    if index % 2 == 0 then
-      local divs = math.floor(#windows / 2)
-      local h    = insetFrame.h / divs
-
-      frame.h = h - margin
-      frame.w = insetFrame.w * (1 - layoutOptions.mainPaneRatio) - margin
-      frame.x = frame.x + insetFrame.w * layoutOptions.mainPaneRatio + margin / 2
-      frame.y = frame.y + h * math.floor(index / 2 - 1) + margin / 2
-    else
-      local divs = math.ceil(#windows / 2)
-      local h    = insetFrame.h / divs
-
-      frame.h = h - margin
-      frame.w = insetFrame.w * layoutOptions.mainPaneRatio - margin
-      frame.x = frame.x + margin / 2
-      frame.y = frame.y + h * math.floor(index / 2) + margin / 2
-    end
-
-    return frame
-  end
-
   layouts["main-left"] = function(window, windows, screen, index, layoutOptions)
     if #windows == 1 then
-      return layouts.monocle(window, windows, screen)
+      return layouts["main-center"](window, windows, screen, index, layoutOptions)
     end
 
     local margin     = hhtwm.margin or 0
@@ -240,7 +68,7 @@ return function(hhtwm)
 
   layouts["main-right"] = function(window, windows, screen, index, layoutOptions)
     if #windows == 1 then
-      return layouts.monocle(window, windows, screen)
+      return layouts["main-center"](window, windows, screen, index, layoutOptions)
     end
 
     local margin     = hhtwm.margin or 0
@@ -311,27 +139,70 @@ return function(hhtwm)
     return frame
   end
 
-  layouts["side-by-side"] = function(window, windows, screen, index, layoutOptions)
+  layouts["tabbed-left"] = function(window, windows, screen, index, layoutOptions)
+    if #windows == 1 then
+      return layouts["main-center"](window, windows, screen, index, layoutOptions)
+    end
+
     local margin     = hhtwm.margin or 0
     local insetFrame = getInsetFrame(screen)
 
     local frame = {
-      x = 0,
-      y = insetFrame.y + margin / 2,
+      x = insetFrame.x,
+      y = insetFrame.y,
       w = 0,
-      h = insetFrame.h - margin
+      h = 0
     }
 
-    if index % 2 == 0 then
-      frame.x = insetFrame.x + margin / 2
-      frame.w = insetFrame.w * layoutOptions.mainPaneRatio - margin
-    else
-      frame.x = insetFrame.x + insetFrame.w * layoutOptions.mainPaneRatio + margin / 2
+    if index == 1 then
+      frame.x = frame.x + insetFrame.w * layoutOptions.mainPaneRatio + margin / 2
+      frame.y = frame.y + margin / 2
       frame.w = insetFrame.w * (1 - layoutOptions.mainPaneRatio) - margin
+      frame.h = insetFrame.h - margin
+    else
+      frame.x = frame.x + margin / 2
+      frame.y = frame.y + margin / 2
+      frame.w = insetFrame.w * layoutOptions.mainPaneRatio - margin
+      frame.h = insetFrame.h - margin
     end
 
     return frame
   end
+
+  layouts["tabbed-right"] = function(window, windows, screen, index, layoutOptions)
+    if #windows == 1 then
+      return layouts["main-center"](window, windows, screen, index, layoutOptions)
+    end
+
+    local margin     = hhtwm.margin or 0
+    local insetFrame = getInsetFrame(screen)
+
+    local frame = {
+      x = insetFrame.x,
+      y = insetFrame.y,
+      w = 0,
+      h = 0
+    }
+
+    if index == 1 then
+      frame.x = frame.x + margin / 2
+      frame.y = frame.y + margin / 2
+      frame.w = insetFrame.w * layoutOptions.mainPaneRatio - margin
+      frame.h = insetFrame.h - margin
+    else
+      frame.x = frame.x + insetFrame.w * layoutOptions.mainPaneRatio + margin / 2
+      frame.y = frame.y + margin / 2
+      frame.w = insetFrame.w * (1 - layoutOptions.mainPaneRatio) - margin
+      frame.h = insetFrame.h - margin
+    end
+
+    return frame
+  end
+
+  -- TODO
+  -- layouts["stacking-columns"] = function(window, windows, screen, index, layoutOptions)
+  --   return nil
+  -- end
 
   return layouts
 end
