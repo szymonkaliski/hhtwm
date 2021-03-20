@@ -651,8 +651,6 @@ module.tile = function()
   -- apply layout window-by-window
   local moveToFloat = {}
 
-  hs.drawing.disableScreenUpdates()
-
   hs.fnutils.each(currentSpaces, function(spaceId)
     local spaceWindows = cache.spaces[spaceId] or {}
 
@@ -683,8 +681,6 @@ module.tile = function()
       end
     end)
   end)
-
-  hs.drawing.enableScreenUpdates()
 
   hs.fnutils.each(moveToFloat, function(win)
     local _, spaceId, winIdx = module.findTrackedWindow(win)
