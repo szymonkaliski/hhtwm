@@ -32,7 +32,7 @@ local ensureCacheSpaces = function(spaceId)
 end
 
 local getCurrentSpacesIds = function()
-  return spaces.activeSpaces()
+  return hs.spaces.activeSpaces()
 end
 
 local getSpaceId = function(win)
@@ -91,12 +91,13 @@ local getScreenBySpaceId = function(spaceId)
 end
 
 local getCurrentSpacesByScreen = function()
-  local currentSpaces = spaces.query(spaces.masks.currentSpaces)
+  local currentSpaces = hs.spaces.activeSpaces()
 
   local spacesIds = {}
 
   hs.fnutils.each(hs.screen.allScreens(), function(screen)
-    local screenSpaces = screen:spaces()
+    log.d("screen", screen)
+    local screenSpaces = hs.spaces.spacesForScreen(screen)
 
     local visibleSpace = hs.fnutils.find(screenSpaces, function(spaceId)
       return hs.fnutils.contains(currentSpaces, spaceId)
