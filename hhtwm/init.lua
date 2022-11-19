@@ -1,7 +1,7 @@
 -- hhtwm - hackable hammerspoon tiling wm
 
 local createLayouts = require('hhtwm.layouts')
-local spaces        = require('hs._asm.undocumented.spaces')
+local spaces        = require('hs.spaces')
 
 local cache   = { spaces = {}, layouts = {}, floating = {}, layoutOptions = {} }
 local module  = { cache = cache }
@@ -32,7 +32,7 @@ local ensureCacheSpaces = function(spaceId)
 end
 
 local getCurrentSpacesIds = function()
-  return spaces.query(spaces.masks.currentSpaces)
+  return spaces.activeSpaces()
 end
 
 local getSpaceId = function(win)
@@ -40,22 +40,22 @@ local getSpaceId = function(win)
 
   win = win or hs.window.frontmostWindow()
 
-  if win ~= nil and win:spaces() ~= nil and #win:spaces() > 0 then
-    spaceId = win:spaces()[1]
+  if win ~= nil and spaces.windowSpaces(win) ~= nil and #spaces.windowSpaces(win) > 0 then
+    spaceId = spaces.windowSpaces(win)[1]
   end
 
   return spaceId or spaces.activeSpace()
 end
 
 local getSpacesIdsTable = function()
-  local spacesLayout = spaces.layout()
+  local spacesLayout = spaces.allSpaces()
   local spacesIds = {}
 
   hs.fnutils.each(hs.screen.allScreens(), function(screen)
-    local spaceUUID = screen:spacesUUID()
+    local spaceUUID = screen:getUUID()
 
     local userSpaces = hs.fnutils.filter(spacesLayout[spaceUUID], function(spaceId)
-      return spaces.spaceType(spaceId) == spaces.types.user
+      return spaces.spaceType(spaceId) == "user"
     end)
 
     hs.fnutils.concat(spacesIds, userSpaces or {})
@@ -70,7 +70,7 @@ local getAllWindowsUsingSpaces = function()
   local tmp = {}
 
   hs.fnutils.each(spacesIds, function(spaceId)
-    local windows = spaces.allWindowsForSpace(spaceId)
+    local windows = spaces.windowsForSpace(spaceId)
 
     hs.fnutils.each(windows, function(win)
       table.insert(tmp, win)
@@ -81,10 +81,10 @@ local getAllWindowsUsingSpaces = function()
 end
 
 local getScreenBySpaceId = function(spaceId)
-  local spacesLayout = spaces.layout()
+  local spacesLayout = spaces.allSpaces()
 
   return hs.fnutils.find(hs.screen.allScreens(), function(screen)
-    local spaceUUID = screen:spacesUUID()
+    local spaceUUID = screen:getUUID()
 
     return hs.fnutils.contains(spacesLayout[spaceUUID], spaceId)
   end)
@@ -158,7 +158,7 @@ module.setLayout = function(layout, spaceId)
   -- so retiling will put them back in the layout
   -- this allows us to switch back from floating layout and get windows back to layout
   cache.floating = hs.fnutils.filter(cache.floating, function(win)
-    return win:spaces()[1] ~= spaceId
+    return spaces.windowSpaces(win)[1] ~= spaceId
   end)
 
   module.tile()
@@ -172,7 +172,7 @@ end
 module.getLayout = function(spaceId)
   spaceId = spaceId or getSpaceId()
 
-  local layout = spaces.layout()
+  local layout = spaces.allSpaces()
   local foundScreenUUID
 
   for screenUUID, layoutSpaces in pairs(layout) do
@@ -184,7 +184,7 @@ module.getLayout = function(spaceId)
   end
 
   local screen = hs.fnutils.find(hs.screen.allScreens(), function(screen)
-    return screen:spacesUUID() == foundScreenUUID
+    return screen:getUUID() == foundScreenUUID
   end)
 
   return cache.layouts[spaceId]
@@ -484,7 +484,7 @@ module.toggleFloat = function(win)
   if not win then return end
 
   if module.isFloating(win) then
-    local spaceId = win:spaces()[1]
+    local spaceId = spaces.windowSpaces(win)[1]
     local foundIdx
 
     for index, floatingWin in pairs(cache.floating) do
@@ -558,7 +558,7 @@ module.tile = function()
     end
 
     -- we also don't care about special windows that have no spaces
-    if not win:spaces() or #win:spaces() == 0 then
+    if not spaces.windowSpaces(win) or #spaces.windowSpaces(win) == 0 then
       return
     end
 
@@ -571,9 +571,9 @@ module.tile = function()
 
   -- add new tiling windows to cache
   hs.fnutils.each(tilingWindows, function(win)
-    if not win or #win:spaces() == 0 then return end
+    if not win or #spaces.windowSpaces(win) == 0 then return end
 
-    local spaces                        = win:spaces()
+    local spaces                        = spaces.windowSpaces(win)
     local spaceId                       = spaces[1]
     local tmp                           = cache.spaces[spaceId] or {}
     local trackedWin, trackedSpaceId, _ = module.findTrackedWindow(win)
@@ -603,7 +603,7 @@ module.tile = function()
     for i = #spaceWindows, 1, -1 do
       -- window exists in cache if there's spaceId and windowId match
       local existsOnScreen = hs.fnutils.find(tilingWindows, function(win)
-        return win:id() == spaceWindows[i]:id() and win:spaces()[1] == spaceId
+        return win:id() == spaceWindows[i]:id() and spaces.windowSpaces(win)[1] == spaceId
       end)
 
       -- window is duplicated (why?) if it's tracked more than once
