@@ -96,7 +96,6 @@ local getCurrentSpacesByScreen = function()
   local spacesIds = {}
 
   hs.fnutils.each(hs.screen.allScreens(), function(screen)
-    log.d("screen", screen)
     local screenSpaces = hs.spaces.spacesForScreen(screen)
 
     local visibleSpace = hs.fnutils.find(screenSpaces, function(spaceId)
@@ -721,6 +720,11 @@ end
 
 -- mostly for debugging
 module.reset = function()
+  log.d('resetting cache')
+  log.d('cache.spaces', hs.inspect(cache.spaces))
+  log.d('cache.layouts', hs.inspect(cache.layouts))
+  log.d('cache.floating', hs.inspect(cache.floating))
+
   cache.spaces   = {}
   cache.layouts  = {}
   cache.floating = {}
@@ -738,13 +742,13 @@ local loadSettings = function()
   log.d('hhtwm.floatingCache', jsonFloatingCache)
 
   -- all windows from window filter
-  local allWindows = getAllWindowsUsingSpaces()
+  -- local allWindows = getAllWindowsUsingSpaces()
 
-  local findWindowById = function(winId)
-    return hs.fnutils.find(allWindows, function(win)
-      return win:id() == winId
-    end)
-  end
+  -- local findWindowById = function(winId)
+  --   return hs.fnutils.find(allWindows, function(win)
+  --     return win == winId
+  --   end)
+  -- end
 
   -- decode tiling cache
   if jsonTilingCache then
@@ -759,7 +763,8 @@ local loadSettings = function()
         cache.layoutOptions[obj.spaceId] = obj.layoutOptions
 
         hs.fnutils.each(obj.windowIds, function(winId)
-          local win = findWindowById(winId)
+          -- local win = findWindowById(winId)
+          local win = hs.window.get(winId)
 
           log.d('restoring (spaceId, windowId, window)', obj.spaceId, winId, win)
           if win then table.insert(cache.spaces[obj.spaceId], win) end
